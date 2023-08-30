@@ -1,16 +1,15 @@
 import os
-
 from roboflow import Roboflow
 from ultralytics import YOLO
 
 
 class CreateCustomModel:
     """
+    A class for creating and training custom YOLO object detection models using Roboflow and Ultralytics.
 
     """
-    def __int__(self, yaml_path: str):
-        self.yaml_path = yaml_path
-        self.current_path = os.getcwd()
+    def __init__(self):
+        self.current_path = os.path.join(os.getcwd(), 'app/models/')
 
     @staticmethod
     def download_dataset(api_key, workspace, project, version):
@@ -27,23 +26,24 @@ class CreateCustomModel:
         project = rf.workspace(workspace).project(project)
         project.version(version).download("yolov8")
 
-    def train(self, model_name):
+    def train(self, model_name, yaml_path):
         """
         Train a YOLO model using the specified configuration.
 
         :param model_name: The name of the model used for training.
+        :param yaml_path:
         :return: None
         """
-        model = YOLO(f"{self.current_path}/models/{model_name}.pt")
+        model = YOLO(f"{self.current_path}{model_name}.pt")
         model.train(
-            data="/home/filip/PycharmProjects/X-ray/bonesss-2/data.yaml",
+            data=yaml_path,
             imgsz=640,
             epochs=10,
             batch=8,
             name=f"{model_name}-custom",
         )
 
-    def validate(self):
+    def validate(self, model):
         pass
 
     def test(self):
