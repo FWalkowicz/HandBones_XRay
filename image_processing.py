@@ -1,6 +1,10 @@
 """
 
 """
+import os
+import cv2
+import supervision as sv
+import pandas
 
 
 class CreateDataset:
@@ -10,13 +14,16 @@ class CreateDataset:
     read images, and save images to the dataset.
 
     """
-    def __int__(self):
+    def __int__(self, number_of_images):
         """
         Initializes an instance of the CreateDataset class.
 
+        :param number_of_images: number of images to convert
         :return: None
         """
-        pass
+        self.number_of_images = number_of_images
+        self.images_directory = os.path.join(os.getcwd(), 'boneage-training-dataset/boneage-training-dataset')
+        self.predicted_images_directory = os.path.join(os.getcwd(), 'predictions')
 
     def start(self):
         """
@@ -26,20 +33,33 @@ class CreateDataset:
         """
         pass
 
-    def read_image(self):
+    @staticmethod
+    def read_image(image_id):
         """
         Reads an image from a source.
         This method is used to read an image from source and process it for the dataset.
 
         :return:
         """
-        pass
+        image = cv2.imread(image_id)
 
-    def save_image(self):
+        return image
+
+    @staticmethod
+    def save_image(image, number):
         """
         Saves an image to the dataset.
         This method saves a previously read image to the dataset.
 
-        :return:
+        :return: None
         """
-        pass
+        cv2.imwrite(f'prediction{number}', image)
+
+    @staticmethod
+    def predict(image, model):
+        mask_annotator = sv.MaskAnnotator()
+        result = model(image, verbose=False)[0]
+        detections = sv.Detections.from_ultralytics(result)
+        annotated_image = mask_annotator.annotate(image.copy(), detections=detections[0])
+
+        return annotated_image
