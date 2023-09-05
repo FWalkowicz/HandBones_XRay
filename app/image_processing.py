@@ -11,7 +11,7 @@ class BoneSegmentation:
     """
 
     """
-    def __int__(self):
+    def __init__(self):
         """
         Initializes an instance of the CreateDataset class.
 
@@ -32,11 +32,12 @@ class BoneSegmentation:
         :param image: The input image on which to perform object segmentation and annotation.
         :return: An annotated image with objects highlighted.
         """
+        image = cv2.imread(image)
         mask_annotator = sv.MaskAnnotator()
         result = self.model(image, verbose=False)[0]
         detections = sv.Detections.from_ultralytics(result)
         annotated_image = mask_annotator.annotate(
-            image.copy(), detections=detections[0]
+            image.copy(), detections=detections
         )
 
         return annotated_image
