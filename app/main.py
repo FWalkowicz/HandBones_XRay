@@ -1,7 +1,7 @@
 from typing import Union
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
-from typing_extensions import Annotated
+import shutil
 from pydantic import BaseModel
 from train import XRayPredictions
 import cv2
@@ -107,5 +107,6 @@ def unique_session_meta():
 
 
 @app.delete("/session/{uniqueSessionId}")
-def delete_session():
-    pass
+def delete_session(uniqueSessionId: str):
+    print("paths " + os.path.join(os.getcwd(), f"sessions/{uniqueSessionId}"))
+    shutil.rmtree(f"./sessions/{uniqueSessionId}")
