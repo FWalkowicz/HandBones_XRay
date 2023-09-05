@@ -1,6 +1,7 @@
 from typing import Union
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
+from typing_extensions import Annotated
 from pydantic import BaseModel
 from train import XRayPredictions
 import cv2
@@ -19,16 +20,27 @@ def read_root():
 
 
 class Item(BaseModel):
-    image: str
-    description: Union[str, None] = None
+    InputImage: UploadFile
+    description: str = None
 
 
 @app.post("/executeAI")
-def execute_ai(model: Item):
-    processing = XRayPredictions(cv2.imread(os.path.join(os.getcwd(), "images/hand_no_good.jpg")))
+async def execute_ai(InputImage: UploadFile):
+    if not InputImage.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+        return {"error": "Only JPEG and PNG images are supported."}
+
+    # Save the uploaded file to a temporary location
+    file_path = os.path.join("temp", InputImage.filename)
+    with open(file_path, "wb") as file:
+        file.write(InputImage.file.read())
+    image = cv2.imread(file_path)
+    #os.remove(file_path)
+
+    processing = XRayPredictions(image=image)
     token = processing.start()
     XRayStorage['UniqueSessionId'] = token
-    return {"UniqueSEssionId ": token}
+
+    return {"UniqueSEssionId ": token, "Name": InputImage.filename}
 
 
 @app.get("/sessions")
