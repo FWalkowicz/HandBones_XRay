@@ -1,69 +1,103 @@
-from pprint import pprint
 import os
-from image_processing import BoneSegmentation
 import numpy as np
-import pandas
 import supervision as sv
-from roboflow import Roboflow
 from ultralytics import YOLO
 import cv2
-"""
-rf = Roboflow(api_key="iT6ldD45bmnaYpuFrf8B")
-project = rf.workspace("yolo-qdpfg").project("bonesss")
-dataset = project.version(2).download("yolov8")
+import secrets
 
 
-model = YOLO("./models/yolov8m-seg.pt")
-result = model.train(
-    data="/home/filip/PycharmProjects/X-ray/bonesss-2/data.yaml",
-    imgsz=640,
-    epochs=10,
-    batch=8,
-    name="yolo_custom",
-)
+def draw_bbox_contours(image, all_contours, min_size: int, max_size: int):
+    for contour in all_contours:
+        if min_size < cv2.contourArea(contour) <= max_size:
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-elements = []
-model = YOLO('/home/filip/PycharmProjects/X-ray/runs/segment/yolo_custom/weights/best.pt')
-image_dir = '/home/filip/PycharmProjects/X-ray/boneage-training-dataset/boneage-training-dataset'
-img_list = os.listdir(image_dir)
-for i in range(50):
-    image = cv2.imread(os.path.join(image_dir, img_list[i]))
+
+def find_objects_contours(image, threshold_value, kernel_size):
+    _, thresh = cv2.threshold(image, threshold_value, 255, cv2.THRESH_BINARY)
+    thresholded = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, np.ones((kernel_size, kernel_size), np.uint8))
+    contours_white, hierarchy_white = cv2.findContours(
+        image=thresholded, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_NONE
+    )
+
+    return contours_white
+
+
+def model_prediction(image):
+    model = YOLO(os.path.join(os.getcwd(), "models/all_bones.pt"))
     mask_annotator = sv.MaskAnnotator()
     result = model(image, verbose=False)[0]
     detections = sv.Detections.from_ultralytics(result)
-    detections_filtered = detections[detections.confidence > 0.75]
+    # detections = detections[detections.class_id == 0]
+    detections = detections[detections.confidence >= 0.70]
+    annotated_image = mask_annotator.annotate(image, detections=detections)
 
-#    for i in range(len(detections.confidence)):
-#        elements.append([i, detections.mask[i]])
-
-    elements_list = pandas.DataFrame(data=elements)
-    pprint(elements_list)
-    annotated_image = mask_annotator.annotate(image.copy(), detections=detections[0])
-    #sv.plot_image(image=annotated_image, size=(8, 8))
-    cv2.imwrite(f'predictions/pred{i}.jpg', annotated_image)
-    print(f'image number {i} saved!')
-
-"""
-model = YOLO('/home/filip/PycharmProjects/X-ray/runs/segment/yolo_custom/weights/best.pt')
-image = cv2.imread('hand_no_good_hand_bad.png')
-image = cv2.resize(image, (600, 600))
-mask_annotator = sv.MaskAnnotator()
-result = model(image, verbose=False)[0]
-detections = sv.Detections.from_ultralytics(result)
-annotated_image = mask_annotator.annotate(image, detections=detections[0])
-#sv.plot_image(image=annotated_image, size=(8, 8))
-polygons = [sv.mask_to_polygons(m) for m in detections.mask]
+    return annotated_image, detections
 
 
-img = np.zeros((600, 600, 3), dtype=np.uint8)
-for i in range(len(detections.confidence)):
-    cv2.drawContours(img, polygons[i], -1, (i*5, i*10, 255-i*20), 2)
+class XRayPredictions:
+    def __init__(self, image, filename):
+        self.model = YOLO(os.path.join(os.getcwd(), "models/all_bones.pt"))
+        self.image = image
+        self.token = secrets.token_urlsafe(2)
+        self.filename = filename
 
-bone = BoneSegmentation
-predict = bone.predict(image=image)
+    def start(self):
+        image = cv2.resize(self.image, (600, 600))
 
-while True:
-    cv2.imshow('img', img)
-    cv2.imshow('bone', predict)
-    if cv2.waitKey(1) == ord('q'):
-        break
+        # predykcja modelu
+        annotated_image, detections = model_prediction(image)
+        polygons = [sv.mask_to_polygons(m) for m in detections.mask]
+
+        # Wyszukanie metalowych obiektów w pierwotnym zdjęciu
+        image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        contours_white = find_objects_contours(image_gray, 235, 5)
+
+        # puste zdjęcie, na które będzie nałożona maska
+        img = np.zeros((600, 600), dtype=np.uint8)  # Use a grayscale image for the mask
+
+        # rysowanie predykcji modelu
+        for i in range(len(detections.confidence)):
+            cv2.drawContours(img, polygons[i], -1, (255, 255, 255), cv2.FILLED)
+
+        # maska z samymi kośćmi zktóre usunie się z odwróconego zdjęcia
+        inverted_mask = cv2.bitwise_not(img)
+
+        # Same kości
+        placeholder = cv2.bitwise_not(image, mask=img)
+        gray_image = cv2.cvtColor(placeholder, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+        _, bones_binary = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY)
+        bones_contour, _ = cv2.findContours(bones_binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+
+        # Usunięcie kości ze zdjęcia
+        inverted_image = cv2.bitwise_not(image, mask=inverted_mask)
+        inverted_image[inverted_mask == 0] = 255
+        inverted_image_gray = cv2.cvtColor(inverted_image, cv2.COLOR_BGR2GRAY)
+        inverted_image_gray = inverted_image_gray[0:390, 0:600]
+        contours = find_objects_contours(inverted_image_gray, 140, 3)
+
+        # metalowe obiekty
+        draw_bbox_contours(image, contours_white, 200, 10000)
+
+        # zaznaczanie wszystkich zmian poza kośćmi
+        draw_bbox_contours(image, contours, 200, 10000)
+        try:
+            os.mkdir(f'./sessions/{self.token}')
+        except OSError as error:
+            print(error)
+        self.save_image("prediction", image)
+        self.save_image("model_prediction", annotated_image)
+        self.save_image("without_bones", inverted_image)
+        self.save_image("only_bones", placeholder)
+
+        return self.token
+
+    def save_image(self, name, image):
+        cv2.imwrite(f"./sessions/{self.token}/{name}.jpg", image)
+
+    def create_image_description(self):
+        for dir_path, dir_names, file_names in os.walk(f"./metadata"):
+            for dir_name in dir_names:
+                if dir_name == self.filename:
+                    pass
+
