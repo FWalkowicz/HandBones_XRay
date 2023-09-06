@@ -154,7 +154,17 @@ def unique_session_image(unique_session_id: str, file_name: str):
 
 @app.get("/session/{uniqueSessionId}/meta/{fileName}")
 def unique_session_meta(unique_session_id: str, file_name: str):
-    pass
+    def file_iterator():
+        with open(
+                os.path.join(f"./sessions/{unique_session_id}/", f"{file_name}.txt"), mode="rb"
+        ) as file:
+            while True:
+                chunk = file.read(65536)
+                if not chunk:
+                    break
+                yield chunk
+
+    return StreamingResponse(file_iterator(), media_type="application/octet-stream")
 
 
 @app.delete("/session/{uniqueSessionId}")
