@@ -86,18 +86,27 @@ class XRayPredictions:
         except OSError as error:
             print(error)
         self.save_image("prediction", image)
+        self.create_image_description("prediction")
         self.save_image("model_prediction", annotated_image)
+        self.create_image_description("model_prediction")
         self.save_image("without_bones", inverted_image)
+        self.create_image_description("without_bones")
         self.save_image("only_bones", placeholder)
+        self.create_image_description("only_bones")
 
         return self.token
 
     def save_image(self, name, image):
         cv2.imwrite(f"./sessions/{self.token}/{name}.jpg", image)
 
-    def create_image_description(self):
+    def create_image_description(self, name):
+        lorem = "Suspendisse faucibus, nisi id ullamcorper ultrices, nunc erat imperdiet ipsum, quis convallis augue orci sit amet diam. Curabitur iaculis turpis leo, lacinia congue libero mollis vitae. Mauris sit amet diam in orci aliquet tempor. In et pharetra sapien. Maecenas porta porttitor quam a maximus. Duis vitae erat ante. Nulla suscipit nibh eu nulla ullamcorper, a tristique mauris varius. Fusce suscipit feugiat ipsum, id malesuada leo pellentesque ut. Donec ut scelerisque sem. Cras pharetra finibus porttitor. "
         for dir_path, dir_names, file_names in os.walk(f"./metadata"):
             for dir_name in dir_names:
                 if dir_name == self.filename:
                     pass
+                else:
+                    with open(f'./sessions/{self.token}/{name}.txt', 'w') as f:
+                        f.write(lorem)
+                        f.close()
 
