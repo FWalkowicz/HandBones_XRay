@@ -138,16 +138,14 @@ def unique_session_image(unique_session_id: str, file_name: str):
     :return:
     """
     def file_iterator():
-        for _, _, file_names in os.walk(f"./sessions/{unique_session_id}"):
-            for filename in file_names:
-                with open(
-                    os.path.join(f"./sessions/{unique_session_id}/", f"{file_name}.jpg"), mode="rb"
-                ) as file:
-                    while True:
-                        chunk = file.read(65536)
-                        if not chunk:
-                            break
-                        yield chunk
+        with open(
+            os.path.join(f"./sessions/{unique_session_id}/", f"{file_name}.jpg"), mode="rb"
+        ) as file:
+            while True:
+                chunk = file.read(65536)
+                if not chunk:
+                    break
+                yield chunk
 
     return StreamingResponse(file_iterator(), media_type="application/octet-stream")
 

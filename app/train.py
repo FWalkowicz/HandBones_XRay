@@ -6,6 +6,22 @@ import cv2
 import secrets
 
 
+def read_file(filename, token, name):
+    try:
+        with open(f"metadata/{filename}", 'r') as file:
+            lines = file.readlines()
+
+        with open(f'./sessions/{token}/{name}.txt', 'w') as new_file:
+            for line in lines:
+                new_file.write(line)
+
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found.")
+
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+
+
 def draw_bbox_contours(image, all_contours, min_size: int, max_size: int):
     for contour in all_contours:
         if min_size < cv2.contourArea(contour) <= max_size:
@@ -102,9 +118,11 @@ class XRayPredictions:
     def create_image_description(self, name):
         lorem = "Suspendisse faucibus, nisi id ullamcorper ultrices, nunc erat imperdiet ipsum, quis convallis augue orci sit amet diam. Curabitur iaculis turpis leo, lacinia congue libero mollis vitae. Mauris sit amet diam in orci aliquet tempor. In et pharetra sapien. Maecenas porta porttitor quam a maximus. Duis vitae erat ante. Nulla suscipit nibh eu nulla ullamcorper, a tristique mauris varius. Fusce suscipit feugiat ipsum, id malesuada leo pellentesque ut. Donec ut scelerisque sem. Cras pharetra finibus porttitor. "
         for dir_path, dir_names, file_names in os.walk(f"./metadata"):
-            for dir_name in dir_names:
-                if dir_name == self.filename:
-                    pass
+            for file_name in file_names:
+                if self.filename.startswith(file_name[:-4]):
+                    print(f"found {self.filename} ---- {file_name}")
+                    read_file(file_name, self.token, name)
+                    return
                 else:
                     with open(f'./sessions/{self.token}/{name}.txt', 'w') as f:
                         f.write(lorem)
