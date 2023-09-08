@@ -1,0 +1,103 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="row">
+    <div class="col-5">
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Select XRay Image</h4>
+            </div>
+            <div class="card-body">
+                <img src="../../assets/img/image_placeholder.jpg" alt="..." id="imageInput" class="w-100 rounded">
+
+            </div>
+            <div class="card-footer">
+                <span class="btn btn-rose btn-round btn-file">
+                    
+                    <span class="fileinput-new">Select image</span>
+                    <input type="file" name="..." onChange="preview_2(this);">
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+    <div class="col-2 text-center">
+        <button class="btn btn-info btn-lg" style="top:45%;">
+           
+            >> Execute >> 
+            <div class="ripple-container"></div>
+        </button>
+    </div>
+    <div class="col-5">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Xray result</h4>
+            </div>
+            <div class="card-body">
+                <img src="../../assets/img/image_placeholder.jpg" alt="..." id="imageOutput" class="w-100 rounded">
+
+            </div>
+            <div class="card-footer">
+                <div class="dropdown show">
+                    <button class="dropdown-toggle btn btn-primary btn-round btn-block" type="button" id="multiDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        Multilevel Dropdown
+                        <div class="ripple-container"></div>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="multiDropdownMenu" x-placement="bottom-start" style="position: absolute; top: 41px; left: 1px; will-change: top, left;">
+                        <a class="dropdown-item" href="#">Action<div class="ripple-container"></div></a>
+                        <a class="dropdown-item" href="#">Another action<div class="ripple-container"><div class="ripple-decorator ripple-on ripple-out" style="left: 62.5px; top: 20.4334px; background-color: rgb(255, 255, 255); transform: scale(18.75);"></div></div></a>
+                     
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Scan descritpion</h4>
+            </div>
+            <div class="card-body">
+            </div>
+            <div class="card-footer">
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="~/assets/js/core/jquery.min.js"></script>
+
+<script>
+
+
+
+
+
+
+    var outImage = "imageInput";
+    function preview_2(obj) {
+        if (FileReader) {
+            var reader = new FileReader();
+            reader.readAsDataURL(obj.files[0]);
+            reader.onload = function (e) {
+                var image = new Image();
+                image.src = e.target.result;
+                image.onload = function () {
+                    document.getElementById(outImage).src = image.src;
+                };
+            }
+        }
+        else {
+            // Not supported
+        }
+    }
+
+</script>

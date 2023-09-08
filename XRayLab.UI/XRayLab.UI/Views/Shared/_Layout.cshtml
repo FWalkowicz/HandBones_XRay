@@ -1,0 +1,114 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XRay Lab</title>
+
+
+    <link rel="stylesheet" type="text/css" href="~/assets/css/material.css" />
+    <link rel="stylesheet" href="~/assets/css/font-awesome.min.css">
+
+    <!-- CSS Files -->
+    <link href="~/assets/css/material-dashboard.css?v=2.1.0" rel="stylesheet" />
+    <!-- CSS Just for demo purpose, don't include it in your project -->
+    <link href="~/assets/demo/demo.css" rel="stylesheet" />
+
+</head>
+
+<body class="sidebar-mini">
+    @RenderSection("scripts", required: false)
+    <div class="wrapper ">
+        <div class="sidebar" data-color="rose" data-background-color="black" data-image="../assets/img/sidebar-1.jpg">
+            <!--
+                Tip 1: You can change the color of the sidebar using: data-color="purple | azure | green | orange | danger"
+
+                Tip 2: you can also add an image using data-image tag
+            -->
+            <div class="logo">
+                <a href="" class="simple-text logo-mini">
+
+                </a>
+                <a href="" class="simple-text logo-normal">
+                    XRay Lab
+                </a>
+            </div>
+            <div class="sidebar-wrapper">
+                <div class="user">
+                    <div class="photo">
+                        <img src="../assets/img/faces/avatar.jpg" />
+                    </div>
+                    <div class="user-info">
+                        <a data-toggle="collapse" href="#collapseExample" class="username">
+                            <span>
+                                Operator 1
+                            </span>
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main-panel">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top ">
+                <div class="container-fluid">
+                    <div class="navbar-wrapper">
+                        <img src="../assets/img/logoblack.png" height="70px" style="margin-left:20px;"/>
+                    </div>
+                   
+              
+                </div>
+            </nav>
+            <!-- End Navbar -->
+            <div class="content">
+                <div class="container-fluid">
+                    @RenderBody()
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="~/assets/js/core/jquery.min.js"></script>
+    <script src="~/assets/js/core/popper.min.js"></script>
+    <script src="~/assets/js/core/bootstrap-material-design.min.js"></script>
+    <script src="~/assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+    <!-- Plugin for the momentJs  -->
+    <script src="~/assets/js/plugins/moment.min.js"></script>
+    <!--  Plugin for Sweet Alert -->
+    <script src="~/assets/js/plugins/sweetalert2.js"></script>
+    <!-- Forms Validations Plugin -->
+    <script src="~/assets/js/plugins/jquery.validate.min.js"></script>
+    <script src="~/assets/js/plugins/jquery.bootstrap-wizard.js"></script>    <!--	Plugin for Select, full documentation here: http://silviomoreto.github.io/bootstrap-select -->
+    <script src="~/assets/js/plugins/bootstrap-selectpicker.js"></script>
+    <!--  Plugin for the DateTimePicker, full documentation here: https://eonasdan.github.io/bootstrap-datetimepicker/ -->
+    <script src="~/assets/js/plugins/bootstrap-datetimepicker.min.js"></script>
+    <!--  DataTables.net Plugin, full documentation here: https://datatables.net/  -->
+    <script src="~/assets/js/plugins/jquery.dataTables.min.js"></script>
+    <!--	Plugin for Tags, full documentation here: https://github.com/bootstrap-tagsinput/bootstrap-tagsinputs  -->
+    <script src="~/assets/js/plugins/bootstrap-tagsinput.js"></script>
+    <!-- Plugin for Fileupload, full documentation here: http://www.jasny.net/bootstrap/javascript/#fileinput -->
+    <script src="~/assets/js/plugins/jasny-bootstrap.min.js"></script>
+    <!--  Full Calendar Plugin, full documentation here: https://github.com/fullcalendar/fullcalendar    -->
+    <script src="~/assets/js/plugins/fullcalendar.min.js"></script>
+    <!-- Vector Map plugin, full documentation here: http://jvectormap.com/documentation/ -->
+    <script src="~/assets/js/plugins/jquery-jvectormap.js"></script>
+    <!--  Plugin for the Sliders, full documentation here: http://refreshless.com/nouislider/ -->
+    <script src="~/assets/js/plugins/nouislider.min.js"></script>
+    <!-- Include a polyfill for ES6 Promises (optional) for IE11, UC Browser and Android browser support SweetAlert -->
+    <!-- Library for adding dinamically elements -->
+    <script src="~/assets/js/plugins/arrive.min.js"></script>
+    <!--  Google Maps Plugin    -->
+    <!--  Notifications Plugin    -->
+    <script src="~/assets/js/plugins/bootstrap-notify.js"></script>
+    <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
+    <script src="~/assets/js/material-dashboard.js?v=2.1.0" type="text/javascript"></script>
+    <!-- Material Dashboard DEMO methods, don't include it in your project! -->
+    <script src="~/assets/demo/demo.js"></script>
+
+    <script src="~/assets/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/assets/js/notification.js"></script>
+
+</body>
+</html>
