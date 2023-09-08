@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/XRayLab.UI/.vs/XRayLab.UI
+/XRayLab.UI/XRayLab.UI/bin/Debug/net6.0
+/XRayLab.UI/XRayLab.UI/obj
