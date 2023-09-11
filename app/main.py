@@ -19,11 +19,6 @@ def read_root():
     return {"Hello": "World"}
 
 
-class Item(BaseModel):
-    InputImage: UploadFile
-    description: str = None
-
-
 @app.post("/executeAI")
 async def execute_ai(input_image: UploadFile):
     """
@@ -102,7 +97,7 @@ def sessions():
     return result
 
 
-@app.get("/session/{uniqueSessionId}")
+@app.get("/session/{unique_session_id}")
 def unique_session(unique_session_id: str):
     """
     List files associated with a current session.
@@ -130,7 +125,7 @@ def unique_session(unique_session_id: str):
     return result
 
 
-@app.get("/session/{uniqueSessionId}/image/{fileName}")
+@app.get("/session/{unique_session_id}/image/{file_name}")
 def unique_session_image(unique_session_id: str, file_name: str):
     """
     Stream an X-ray image file from a specific session.
@@ -150,7 +145,7 @@ def unique_session_image(unique_session_id: str, file_name: str):
     return StreamingResponse(file_iterator(), media_type="application/octet-stream")
 
 
-@app.get("/session/{uniqueSessionId}/meta/{fileName}")
+@app.get("/session/{unique_session_id}/meta/{file_name}")
 def unique_session_meta(unique_session_id: str, file_name: str):
     def file_iterator():
         with open(
@@ -165,7 +160,7 @@ def unique_session_meta(unique_session_id: str, file_name: str):
     return StreamingResponse(file_iterator(), media_type="application/octet-stream")
 
 
-@app.delete("/session/{uniqueSessionId}")
+@app.delete("/session/{unique_session_id}")
 def delete_session(unique_session_id: str):
     """
     Delete current session and all associated files.
