@@ -1,15 +1,20 @@
-﻿using System.Text;
+﻿using Newtonsoft.Json;
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using XRayLab.UI.Core;
 using XRayLab.UI.DTO;
 
 namespace XRayLab.UI.ApiWrapper
 {
-    public static class XRayAPI
+    public class XRayAPI
     {
-        private static string WebApiUrl = ULRs.XRayAPIURL;
-        private static HttpClient client;
+        private string WebApiUrl = ULRs.XRayAPIURL;
+        private HttpClient client;
 
-        public static void Init()
+        public XRayAPI()
         {
             var httpHandler = new HttpClientHandler
             {
@@ -21,14 +26,28 @@ namespace XRayLab.UI.ApiWrapper
             client.BaseAddress = new Uri(WebApiUrl);
         }
 
-        public static string POST_ExecuteAI(MeasureRequest body)
+        public SessionListDTO POST_ExecuteAI(byte[] byteArray)
         {
             try
             {
-                //var serializedItem = JsonConvert.SerializeObject(body);
-                //var response = client.PostAsync($"GetMeasure", new StringContent(serializedItem, Encoding.UTF8, "application/json")).Result;
+                //HttpContent content = new StreamContent(body);
+                //content.Headers.ContentType = new MediaTypeHeaderValue("multipart/form-data");
+
+                //var response = client.PostAsync($"executeAI", new StreamContent(body)).Result;
                 //var content = response.Content.ReadAsStringAsync().Result;
-                return null;
+                //SessionListDTO sessionList = JsonConvert.DeserializeObject<SessionListDTO>(content);
+
+                MultipartFormDataContent form = new MultipartFormDataContent();
+
+                form.Add(new ByteArrayContent(byteArray, 0, byteArray.Length), "input_image", "hello1.jpg");
+                HttpResponseMessage response = client.PostAsync("executeAI", form).Result;
+
+                response.EnsureSuccessStatusCode();
+                string result = response.Content.ReadAsStringAsync().Result;
+
+                SessionListDTO sessionList = JsonConvert.DeserializeObject<SessionListDTO>(result);
+
+                return sessionList;
 
             }
             catch (Exception er)
@@ -43,14 +62,15 @@ namespace XRayLab.UI.ApiWrapper
             }
         }
 
-        public static string GET_Sessions()
+        public SessionListDTO GET_Sessions()
         {
             try
             {
-                //var serializedItem = JsonConvert.SerializeObject(body);
-                //var response = client.PostAsync($"GetMeasure", new StringContent(serializedItem, Encoding.UTF8, "application/json")).Result;
-                //var content = response.Content.ReadAsStringAsync().Result;
-                return null;
+                var result = client.GetAsync($"sessions").Result;
+                var content = result.Content.ReadAsStringAsync().Result;
+                
+                SessionListDTO sessionList = JsonConvert.DeserializeObject<SessionListDTO>(content);
+                return sessionList;
 
             }
             catch (Exception er)
@@ -65,14 +85,15 @@ namespace XRayLab.UI.ApiWrapper
             }
         }
 
-        public static string GET_Session(string uniqueSessionId)
+        public List<FileDTO> GET_Session(string uniqueSessionId)
         {
             try
             {
-                //var serializedItem = JsonConvert.SerializeObject(body);
-                //var response = client.PostAsync($"GetMeasure", new StringContent(serializedItem, Encoding.UTF8, "application/json")).Result;
-                //var content = response.Content.ReadAsStringAsync().Result;
-                return null;
+                var result = client.GetAsync($"session/{{uniqueSessionId}}?unique_session_id={uniqueSessionId}").Result;
+                var content = result.Content.ReadAsStringAsync().Result;
+
+                List<FileDTO> sessionList = JsonConvert.DeserializeObject<List<FileDTO>>(content);
+                return sessionList;
 
             }
             catch (Exception er)
@@ -87,14 +108,12 @@ namespace XRayLab.UI.ApiWrapper
             }
         }
 
-        public static string GET_UniqueSessionImage(string uniqueSessionId,string filename)
+        public Stream GET_UniqueSessionImage(string uniqueSessionId, string fileName)
         {
             try
             {
-                //var serializedItem = JsonConvert.SerializeObject(body);
-                //var response = client.PostAsync($"GetMeasure", new StringContent(serializedItem, Encoding.UTF8, "application/json")).Result;
-                //var content = response.Content.ReadAsStringAsync().Result;
-                return null;
+                var result = client.GetStreamAsync($"session/{uniqueSessionId}/image/{fileName}").Result;
+                return result;
 
             }
             catch (Exception er)
@@ -109,14 +128,14 @@ namespace XRayLab.UI.ApiWrapper
             }
         }
 
-        public static string GET_UniqueSessionMeta(string uniqueSessionId, string metadata)
+        public string GET_UniqueSessionMeta(string uniqueSessionId, string metadata)
         {
             try
             {
-                //var serializedItem = JsonConvert.SerializeObject(body);
-                //var response = client.PostAsync($"GetMeasure", new StringContent(serializedItem, Encoding.UTF8, "application/json")).Result;
-                //var content = response.Content.ReadAsStringAsync().Result;
-                return null;
+                var result = client.GetAsync($"session/{uniqueSessionId}/meta/{metadata}").Result;
+                var content = result.Content.ReadAsStringAsync().Result;
+
+                return content;
 
             }
             catch (Exception er)
@@ -131,15 +150,12 @@ namespace XRayLab.UI.ApiWrapper
             }
         }
 
-        public static string DELETE_UniqueSession(string uniqueSessionId, string metadata)
+        public void DELETE_UniqueSession(string uniqueSessionId)
         {
             try
             {
-                //var serializedItem = JsonConvert.SerializeObject(body);
-                //var response = client.PostAsync($"GetMeasure", new StringContent(serializedItem, Encoding.UTF8, "application/json")).Result;
-                //var content = response.Content.ReadAsStringAsync().Result;
-                return null;
-
+                var result = client.DeleteAsync($"session/{uniqueSessionId}").Result;
+                var content = result.Content.ReadAsStringAsync().Result;
             }
             catch (Exception er)
             {
@@ -149,75 +165,8 @@ namespace XRayLab.UI.ApiWrapper
                     Class = nameof(XRayAPI),
                     Method = "GetMeasure"
                 });
-                return null;
             }
         }
 
-        //public static MeasureResponse GetMeasureFaster(MeasureRequest body)
-        //{
-        //    try
-        //    {
-        //        var serializedItem = JsonConvert.SerializeObject(body);
-        //        var response = client.PostAsync($"GetMeasureFaster", new StringContent(serializedItem, Encoding.UTF8, "application/json")).Result;
-        //        var content = response.Content.ReadAsStringAsync().Result;
-        //        return JsonConvert.DeserializeObject<MeasureResponse>(content);
-
-        //    }
-        //    catch (Exception er)
-        //    {
-        //        Cache.Error.AddToQueue(new ErrorDTO()
-        //        {
-        //            Message = er.Message,
-        //            Class = nameof(BroadSens),
-        //            Method = "GetMeasureFaster"
-        //        });
-        //        return null;
-        //    }
-        //}
-
-        //public static void InitSensors()
-        //{
-        //    try
-        //    {
-        //        var result = client.GetAsync($"InitSensors").Result;
-        //        var content = result.Content.ReadAsStringAsync().Result;
-        //        Cache.Cache.BroadSenseSetting = JsonConvert.DeserializeObject<InitBroadSenseResponse>(content);
-
-
-        //        for (int i = 0; i < 4; i++)
-        //        {
-        //            var deviceData = Cache.Cache.BroadSenseSetting?.DeviceDatas[0];
-
-        //            Cache.Cache.StausMeasurement[i].Gain = deviceData.Channels[i].GainInit.HasValue ? deviceData.Channels[i].GainInit.Value : 0;
-        //            Cache.Cache.StausMeasurement[i].ColorClass = BootStrapColorEnum.@default.ToString();
-        //        }
-        //    }
-        //    catch (Exception er)
-        //    {
-        //        Cache.Error.AddToQueue(new ErrorDTO()
-        //        {
-        //            Message = er.Message,
-        //            Class = nameof(BroadSens),
-        //            Method = "InitSensors"
-        //        });
-        //    }
-        //}
-
-        //public static void SetProbes()
-        //{
-        //    try
-        //    {
-        //        var result = client.GetAsync($"SetProbesPerSek/{Cache.Settings.ProbesPerSec}").Result;
-        //    }
-        //    catch (Exception er)
-        //    {
-        //        Cache.Error.AddToQueue(new ErrorDTO()
-        //        {
-        //            Message = er.Message,
-        //            Class = nameof(BroadSens),
-        //            Method = "SetProbes"
-        //        });
-        //    }
-        //}
     }
 }

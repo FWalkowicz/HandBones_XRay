@@ -14,7 +14,7 @@
             </div>
             <div class="card-footer">
                 <span class="btn btn-rose btn-round btn-file">
-                    
+
                     <span class="fileinput-new">Select image</span>
                     <input type="file" name="..." onChange="preview_2(this);">
                 </span>
@@ -25,16 +25,15 @@
 
     </div>
     <div class="col-2 text-center">
-        <button class="btn btn-info btn-lg" style="top:45%;">
-           
-            >> Execute >> 
+        <button class="btn btn-info btn-lg" style="top:45%;" id="btn_execute">
+            >> Execute >>
             <div class="ripple-container"></div>
         </button>
     </div>
     <div class="col-5">
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title">Xray result</h4>
+                <h4 class="card-title">Xray result</h4> <p id="resultDescription"></p>
             </div>
             <div class="card-body">
                 <img src="../../assets/img/image_placeholder.jpg" alt="..." id="imageOutput" class="w-100 rounded">
@@ -43,13 +42,15 @@
             <div class="card-footer">
                 <div class="dropdown show">
                     <button class="dropdown-toggle btn btn-primary btn-round btn-block" type="button" id="multiDropdownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                        Multilevel Dropdown
+                        Views
                         <div class="ripple-container"></div>
                     </button>
                     <div class="dropdown-menu" aria-labelledby="multiDropdownMenu" x-placement="bottom-start" style="position: absolute; top: 41px; left: 1px; will-change: top, left;">
-                        <a class="dropdown-item" href="#">Action<div class="ripple-container"></div></a>
-                        <a class="dropdown-item" href="#">Another action<div class="ripple-container"><div class="ripple-decorator ripple-on ripple-out" style="left: 62.5px; top: 20.4334px; background-color: rgb(255, 255, 255); transform: scale(18.75);"></div></div></a>
-                     
+                        <a class="dropdown-item" id="btn_prediction">Prediction<div class="ripple-container"></div></a>
+                        <a class="dropdown-item" id="btn_w_bones">Without Bones<div class="ripple-container"><div class="ripple-decorator ripple-on ripple-out" style="left: 62.5px; top: 20.4334px; background-color: rgb(255, 255, 255); transform: scale(18.75);"></div></div></a>
+                        <a class="dropdown-item" id="btn_bones">Only Bones<div class="ripple-container"><div class="ripple-decorator ripple-on ripple-out" style="left: 62.5px; top: 20.4334px; background-color: rgb(255, 255, 255); transform: scale(18.75);"></div></div></a>
+                        <a class="dropdown-item" id="btn_m_prediction">Model Prediction<div class="ripple-container"><div class="ripple-decorator ripple-on ripple-out" style="left: 62.5px; top: 20.4334px; background-color: rgb(255, 255, 255); transform: scale(18.75);"></div></div></a>
+
                     </div>
                 </div>
             </div>
@@ -65,6 +66,7 @@
                 <h4 class="card-title">Scan descritpion</h4>
             </div>
             <div class="card-body">
+                <p id="description"/>
             </div>
             <div class="card-footer">
             </div>
@@ -76,13 +78,33 @@
 <script src="~/assets/js/core/jquery.min.js"></script>
 
 <script>
+    var uniqueSessionId = "";
+    
+    var inputImage = "imageInput";
+    var outputImage = "imageOutput";
+    
+    $("#btn_execute").click(function () {
+        sendImage();
+    })
+
+    $("#btn_prediction").click(function () {
+        callChangeAiModel("prediction");
+        $("#resultDescription").text("Prediction");
+    })
+    $("#btn_w_bones").click(function () {
+        callChangeAiModel("without_bones");
+        $("#resultDescription").text("Without bones");
+    })
+    $("#btn_bones").click(function () {
+        callChangeAiModel("only_bones");
+        $("#resultDescription").text("Only Bones");
+    })
+    $("#btn_m_prediction").click(function () {
+        callChangeAiModel("model_prediction");
+        $("#resultDescription").text("Model prediction");
+    })
 
 
-
-
-
-
-    var outImage = "imageInput";
     function preview_2(obj) {
         if (FileReader) {
             var reader = new FileReader();
@@ -91,7 +113,7 @@
                 var image = new Image();
                 image.src = e.target.result;
                 image.onload = function () {
-                    document.getElementById(outImage).src = image.src;
+                    document.getElementById(inputImage).src = image.src;
                 };
             }
         }
@@ -99,5 +121,52 @@
             // Not supported
         }
     }
+
+    function setResult(response)
+    {
+        uniqueSessionId = response.uniqueSessionId;
+        document.getElementById(outputImage).src = response.imageBase64;
+        $("#description").text(response.description);
+    }
+
+    function callChangeAiModel(modelName) {
+        $.ajax({
+            type: "GET",
+            url: "XRay/ChangeAIImage/" + uniqueSessionId + "/" + modelName,
+            success: function (response) {
+                setResult(response);
+                $("#resultDescription").text("Prediction");
+            },
+            error: function (data) {
+                console.log("error");
+            }
+
+        });
+    }
+
+    function sendImage() {
+        var imagebase64 = $("#imageInput").attr('src');
+
+        var jsondata = JSON.stringify({
+            Image: imagebase64,
+        });
+        $.ajax({
+            url: 'XRay/ExecuteAI',
+            type: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            data: jsondata,
+            contentType: "text/json; charset=utf-8",
+            success: function (response) {
+                setResult(response);
+            },
+            error: function (response) {
+                alert(response.status);
+            }
+        });
+    }
+
 
 </script>

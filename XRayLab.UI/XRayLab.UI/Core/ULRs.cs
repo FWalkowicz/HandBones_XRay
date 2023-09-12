@@ -2,6 +2,6 @@
 {
     public static class ULRs
     {
-        public const string XRayAPIURL = "asd";
+        public const string XRayAPIURL = "http://192.168.2.116:8003";
     }
 }
