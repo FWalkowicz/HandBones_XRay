@@ -58,6 +58,6 @@ stages:
           command: buildAndPush
           repository: 'xray_ml_api'
           dockerfile: $(Build.Repository.LocalPath)/XRayLab.ML/Dockerfile
-          containerRegistry: $(DOCKER_REGISTRY_CONNECTOR)
+          containerRegistry: 'ComcoreMedical_ACR_Connector'
           tags: |
             $(tag)
