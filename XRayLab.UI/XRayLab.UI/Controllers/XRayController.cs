@@ -38,15 +38,16 @@ namespace XRayLab.UI.Controllers
             var result = _xRay.POST_ExecuteAI(ReadFully(stream));
             //=====
             var image = _xRay.GET_UniqueSessionImage(result.UniqueSessionId, "prediction");
-
             var imageMeta = _xRay.GET_UniqueSessionMeta(result.UniqueSessionId, "prediction");
+
 
             string base64ImageRepresentation = Convert.ToBase64String(ReadFully(image));
             var response = new ResponseClassDTO()
             {
                 UniqueSessionId = result.UniqueSessionId,
                 ImageBase64 = $"data:image/jpeg;base64,{base64ImageRepresentation}",
-                Description = imageMeta
+                Description = imageMeta,
+                Files = result.Files.Where(s => !s.FileName.Contains("txt")).ToList()
             };
 
 
@@ -56,18 +57,18 @@ namespace XRayLab.UI.Controllers
 
         [HttpGet]
         [Route("{action}/{sessionId}/{modelName}")]
-        public ActionResult ChangeAIImage(string modelName,string sessionId)
+        public ActionResult ChangeAIImage(string modelName, string sessionId)
         {
             //=====
             var image = _xRay.GET_UniqueSessionImage(sessionId, modelName);
-            var imageMeta = _xRay.GET_UniqueSessionMeta(sessionId, "prediction");
+            var imageMeta = _xRay.GET_UniqueSessionMeta(sessionId, modelName);
 
             string base64ImageRepresentation = Convert.ToBase64String(ReadFully(image));
             var response = new ResponseClassDTO()
             {
                 UniqueSessionId = sessionId,
                 ImageBase64 = $"data:image/jpeg;base64,{base64ImageRepresentation}",
-                Description= imageMeta
+                Description = imageMeta
             };
 
 

@@ -55,6 +55,8 @@ namespace XRayLab.UI
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
+            app.MapHub<NotificationHub>("/notifications");
+
             app.Run();
         }
     }

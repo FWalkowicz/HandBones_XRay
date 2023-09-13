@@ -4,9 +4,9 @@
 <div class="row">
     <div class="col-5">
 
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header">
-                <h4 class="card-title">Select XRay Image</h4>
+                <h3 class="card-title">XRay Input Image </h3>
             </div>
             <div class="card-body">
                 <img src="../../assets/img/image_placeholder.jpg" alt="..." id="imageInput" class="w-100 rounded">
@@ -31,9 +31,9 @@
         </button>
     </div>
     <div class="col-5">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header">
-                <h4 class="card-title">Xray result</h4> <p id="resultDescription"></p>
+                <h3 class="card-title" >AI XRay result: <b id="resultDescription"></b> </h3>
             </div>
             <div class="card-body">
                 <img src="../../assets/img/image_placeholder.jpg" alt="..." id="imageOutput" class="w-100 rounded">
@@ -46,11 +46,10 @@
                         <div class="ripple-container"></div>
                     </button>
                     <div class="dropdown-menu" aria-labelledby="multiDropdownMenu" x-placement="bottom-start" style="position: absolute; top: 41px; left: 1px; will-change: top, left;">
-                        <a class="dropdown-item" id="btn_prediction">Prediction<div class="ripple-container"></div></a>
-                        <a class="dropdown-item" id="btn_w_bones">Without Bones<div class="ripple-container"><div class="ripple-decorator ripple-on ripple-out" style="left: 62.5px; top: 20.4334px; background-color: rgb(255, 255, 255); transform: scale(18.75);"></div></div></a>
-                        <a class="dropdown-item" id="btn_bones">Only Bones<div class="ripple-container"><div class="ripple-decorator ripple-on ripple-out" style="left: 62.5px; top: 20.4334px; background-color: rgb(255, 255, 255); transform: scale(18.75);"></div></div></a>
-                        <a class="dropdown-item" id="btn_m_prediction">Model Prediction<div class="ripple-container"><div class="ripple-decorator ripple-on ripple-out" style="left: 62.5px; top: 20.4334px; background-color: rgb(255, 255, 255); transform: scale(18.75);"></div></div></a>
-
+                        @* <a class="dropdown-item" id="btn_prediction">Prediction<div class="ripple-container"></div></a>
+                        <a class="dropdown-item" id="btn_w_bones">Without Bones<div class="ripple-container"></div></a>
+                        <a class="dropdown-item" id="btn_bones">Only Bones<div class="ripple-container"></div></a>
+                        <a class="dropdown-item" id="btn_m_prediction">Model Prediction<div class="ripple-container"></div></a>*@
                     </div>
                 </div>
             </div>
@@ -61,12 +60,12 @@
 <div class="row">
     <div class="col-12">
 
-        <div class="card">
+        <div class="card mt-5">
             <div class="card-header">
-                <h4 class="card-title">Scan descritpion</h4>
+                <h3 class="card-title">Scan descritpion</h3>
             </div>
             <div class="card-body">
-                <p id="description"/>
+                <p id="description" />
             </div>
             <div class="card-footer">
             </div>
@@ -78,32 +77,25 @@
 <script src="~/assets/js/core/jquery.min.js"></script>
 
 <script>
+
+
+
+
     var uniqueSessionId = "";
-    
+
     var inputImage = "imageInput";
     var outputImage = "imageOutput";
-    
+    let swalAlert = undefined;
+
     $("#btn_execute").click(function () {
         sendImage();
     })
 
-    $("#btn_prediction").click(function () {
-        callChangeAiModel("prediction");
-        $("#resultDescription").text("Prediction");
-    })
-    $("#btn_w_bones").click(function () {
-        callChangeAiModel("without_bones");
-        $("#resultDescription").text("Without bones");
-    })
-    $("#btn_bones").click(function () {
-        callChangeAiModel("only_bones");
-        $("#resultDescription").text("Only Bones");
-    })
-    $("#btn_m_prediction").click(function () {
-        callChangeAiModel("model_prediction");
-        $("#resultDescription").text("Model prediction");
-    })
-
+    $(".dropdown-menu").on("click", "a", function (event) {
+        var className = event.target.className.split(' ')[1];
+        callChangeAiModel(className);
+        $("#resultDescription").text(event.target.innerText);
+    });
 
     function preview_2(obj) {
         if (FileReader) {
@@ -122,20 +114,45 @@
         }
     }
 
-    function setResult(response)
-    {
+    function setResult(response) {
         uniqueSessionId = response.uniqueSessionId;
         document.getElementById(outputImage).src = response.imageBase64;
         $("#description").text(response.description);
-    }
 
+    }
+    function bindViewMenu(response) {
+        var obj = response.files;
+        Object.keys(obj).forEach(function (key) {
+            var text = "<a class='dropdown-item " + obj[key].friendlyName + "'>" + obj[key].label + "<div class='ripple-container'></div></a>";
+            $('.dropdown-menu').append(text);
+
+        })
+    }
+    function showLoading()
+    {
+        Swal.fire({
+            title: 'Wait ...',
+            onBeforeOpen() {
+                Swal.showLoading()
+            },
+            onAfterClose() {
+                Swal.hideLoading()
+            },
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            allowEnterKey: false
+        })
+    }
+  
     function callChangeAiModel(modelName) {
+        showLoading();
+
         $.ajax({
             type: "GET",
             url: "XRay/ChangeAIImage/" + uniqueSessionId + "/" + modelName,
             success: function (response) {
                 setResult(response);
-                $("#resultDescription").text("Prediction");
+                Swal.close();
             },
             error: function (data) {
                 console.log("error");
@@ -150,6 +167,9 @@
         var jsondata = JSON.stringify({
             Image: imagebase64,
         });
+
+        showLoading();
+
         $.ajax({
             url: 'XRay/ExecuteAI',
             type: 'POST',
@@ -161,9 +181,12 @@
             contentType: "text/json; charset=utf-8",
             success: function (response) {
                 setResult(response);
+                bindViewMenu(response);
+                $("#resultDescription").text("prediction");
+                Swal.close();
             },
             error: function (response) {
-                alert(response.status);
+                //alert(response.status);
             }
         });
     }
