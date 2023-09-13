@@ -50,6 +50,96 @@ def model_prediction(image):
 
     return annotated_image, detections
 
+def find_center_bbox(detections, class_id: int) -> list:
+    dots = []
+    for dot in detections.xyxy[detections.class_id == class_id]:
+        pt1 = (int((dot[0] + dot[2]) / 2), int((dot[1] + dot[3]) / 2))
+        dots.append(pt1)
+    return dots
+
+
+def find_nearest_point(pt1, points):
+    pt2 = points[cdist([pt1], points).argmin()]
+    return pt2
+
+
+def sort_by_x(point):
+    return point[0]
+
+
+def draw_phantom(image, points, neighbour_points) -> None:
+    for point in points:
+        pt2 = find_nearest_point(point, neighbour_points)
+        cv2.line(image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
+        cv2.circle(image, point, 5, (255, 0, 0), cv2.FILLED)
+        cv2.putText(image, f"{points.index(point)}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+
+
+def phantom(image, detections):
+    classes = [
+        "Carpals",
+        "Distal phalanges",
+        "Intermediate phalanges",
+        "Metacarpals",
+        "Proximal phalanges",
+        "Radius",
+        "Ulna",
+    ]
+    points_0 = find_center_bbox(detections, 0)
+    points_1 = find_center_bbox(detections, 1)
+    points_2 = find_center_bbox(detections, 2)
+    points_3 = find_center_bbox(detections, 3)
+    points_4 = find_center_bbox(detections, 4)
+
+    points_0 = sorted(points_0, key=sort_by_x)
+    points_1 = sorted(points_1, key=sort_by_x)
+    points_2 = sorted(points_2, key=sort_by_x)
+    points_3 = sorted(points_3, key=sort_by_x)
+    points_4 = sorted(points_4, key=sort_by_x)
+
+    draw_phantom(image, points_1, points_2+points_4)
+    draw_phantom(image, points_2, points_4)
+    draw_phantom(image, points_4, points_3)
+    draw_phantom(image, points_3, points_0)
+
+    for point in points_0:
+        cv2.circle(image, point, 5, (255, 0, 0), cv2.FILLED)
+        cv2.putText(image, f"{points_0.index(point)}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+
+    for point in points_0:
+        points_0.remove(point)
+        pt2 = find_nearest_point(point, points_0)
+        cv2.line(image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
+        points_0.append(point)
+
+    points = {}
+    for class_id, class_name in enumerate(classes):
+        points[class_name] = find_center_bbox(detections, class_id)
+        points[class_name] = sorted(points[class_name], key=sort_by_x)
+
+    finger_bones_number = {
+        "Carpals": 8,
+        "Distal phalanges": 5,
+        "Intermediate phalanges": 4,
+        "Proximal phalanges": 5,
+        "Metacarpals": 5,
+    }
+    finger_counts = {
+        "Carpals": len(points["Carpals"]),
+        "Distal phalanges": len(points["Distal phalanges"]),
+        "Intermediate phalanges": len(points["Intermediate phalanges"]),
+        "Proximal phalanges": len(points["Proximal phalanges"]),
+        "Metacarpals": len(points["Metacarpals"]),
+    }
+
+    missing_bones = []
+
+    for class_name, count in finger_counts.items():
+        if count > 0:
+            missing_bones.append(f"<p>Detected {count} {class_name}, missing {finger_bones_number[class_name] - count}</p>")
+
+    return image, missing_bones
+
 
 class XRayPredictions:
     def __init__(self, image, filename):
@@ -64,6 +154,7 @@ class XRayPredictions:
         # predykcja modelu
         annotated_image, detections = model_prediction(image)
         polygons = [sv.mask_to_polygons(m) for m in detections.mask]
+        phantom_image, missing_bones = phantom(annotated_image.copy(), detections)
 
         # Wyszukanie metalowych obiektów w pierwotnym zdjęciu
         image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -109,6 +200,8 @@ class XRayPredictions:
         self.create_image_description("without_bones")
         self.save_image("only_bones", placeholder)
         self.create_image_description("only_bones")
+        self.save_image("phantom", phantom_image)
+        self.create_image_description("phantom")
 
         return self.token
 

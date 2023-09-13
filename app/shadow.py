@@ -4,7 +4,6 @@ import numpy as np
 import supervision as sv
 from ultralytics import YOLO
 import cv2
-import mediapipe as mp
 
 
 def read_file(filename, token, name):
@@ -55,8 +54,8 @@ def model_prediction(image, classes):
     return annotated_image, detections
 
 
-model = YOLO(os.path.join(os.getcwd(), "models/all_bones.pt"))
-image = cv2.imread("/home/filip/PycharmProjects/XRay/images/broken.png")
+model = YOLO(os.path.join(os.getcwd(), "C:/Users/Filip/PycharmProjects/XRay/app/models/all_bones.pt"))
+image = cv2.imread("C:/Users/Filip/PycharmProjects/XRay/images/broken.png")
 """
 (h, w) = image.shape[:2]
 (cX, cY) = (w // 2, h // 2)
@@ -81,6 +80,70 @@ def sort_by_x(point):
     return point[0]
 
 
+def draw_phantom(image, points, neighbour_points) -> None:
+    for point in points:
+        pt2 = find_nearest_point(point, neighbour_points)
+        cv2.line(image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
+        cv2.circle(image, point, 5, (255, 0, 0), cv2.FILLED)
+        cv2.putText(image, f"{points.index(point)}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+
+def phantom(image, detections, classes):
+
+    points_0 = find_center_bbox(detections, 0)
+    points_1 = find_center_bbox(detections, 1)
+    points_2 = find_center_bbox(detections, 2)
+    points_3 = find_center_bbox(detections, 3)
+    points_4 = find_center_bbox(detections, 4)
+
+    points_0 = sorted(points_0, key=sort_by_x)
+    points_1 = sorted(points_1, key=sort_by_x)
+    points_2 = sorted(points_2, key=sort_by_x)
+    points_3 = sorted(points_3, key=sort_by_x)
+    points_4 = sorted(points_4, key=sort_by_x)
+
+    draw_phantom(image, points_1, points_2+points_4)
+    draw_phantom(image, points_2, points_4)
+    draw_phantom(image, points_4, points_3)
+    draw_phantom(image, points_3, points_0)
+
+    for point in points_0:
+        cv2.circle(image, point, 5, (255, 0, 0), cv2.FILLED)
+        cv2.putText(image, f"{points_0.index(point)}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+
+    for point in points_0:
+        points_0.remove(point)
+        pt2 = find_nearest_point(point, points_0)
+        cv2.line(image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
+        points_0.append(point)
+
+    points = {}
+    for class_id, class_name in enumerate(classes):
+        points[class_name] = find_center_bbox(detections, class_id)
+        points[class_name] = sorted(points[class_name], key=sort_by_x)
+
+    finger_bones_number = {
+        "Carpals": 8,
+        "Distal phalanges": 5,
+        "Intermediate phalanges": 4,
+        "Proximal phalanges": 5,
+        "Metacarpals": 5,
+    }
+    finger_counts = {
+        "Carpals": len(points["Carpals"]),
+        "Distal phalanges": len(points["Distal phalanges"]),
+        "Intermediate phalanges": len(points["Intermediate phalanges"]),
+        "Proximal phalanges": len(points["Proximal phalanges"]),
+        "Metacarpals": len(points["Metacarpals"]),
+    }
+
+    missing_bones = []
+
+    for class_name, count in finger_counts.items():
+        if count > 0:
+            missing_bones.append(f"<p>Detected {count} {class_name}, missing {finger_bones_number[class_name] - count}</p>")
+
+    return image, missing_bones
+
 def start(image):
     classes = [
         "Carpals",
@@ -102,73 +165,12 @@ def start(image):
         f"{class_id, classes[class_id]} {confidence:0.2f}"
         for _, _, confidence, class_id, _ in detections
     ]
-
-    points_0 = find_center_bbox(detections, 0)
-    points_1 = find_center_bbox(detections, 1)
-    points_2 = find_center_bbox(detections, 2)
-    points_3 = find_center_bbox(detections, 3)
-    points_4 = find_center_bbox(detections, 4)
-
-    points_0 = sorted(points_0, key=sort_by_x)
-    points_1 = sorted(points_1, key=sort_by_x)
-    points_2 = sorted(points_2, key=sort_by_x)
-    points_3 = sorted(points_3, key=sort_by_x)
-    points_4 = sorted(points_4, key=sort_by_x)
-
-    for point in points_1:
-        pt2 = find_nearest_point(point, points_2+points_4)
-        cv2.line(annotated_image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
-        cv2.circle(annotated_image, point, 5, (255, 0, 0), cv2.FILLED)
-        cv2.putText(annotated_image, f"{points_1.index(point)} - {classes[1]}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-
-    for point in points_2:
-        pt2 = find_nearest_point(point, points_4)
-        cv2.line(annotated_image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
-        cv2.circle(annotated_image, point, 5, (255, 0, 0), cv2.FILLED)
-        cv2.putText(annotated_image, f"{points_2.index(point)+1} - {classes[2]}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-
-    for point in points_4:
-        pt2 = find_nearest_point(point, points_3)
-        cv2.line(annotated_image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
-        cv2.circle(annotated_image, point, 5, (255, 0, 0), cv2.FILLED)
-        cv2.putText(annotated_image, f"{points_4.index(point)} - {classes[4]}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-
-    for point in points_3:
-        pt2 = find_nearest_point(point, points_0)
-        cv2.line(annotated_image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
-        cv2.circle(annotated_image, point, 5, (255, 0, 0), cv2.FILLED)
-        cv2.putText(annotated_image, f"{points_3.index(point)} - {classes[3]}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-
-    for point in points_0:
-        cv2.circle(annotated_image, point, 5, (255, 0, 0), cv2.FILLED)
-        cv2.putText(annotated_image, f"{points_0.index(point)} - {classes[0]}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-
-    for point in points_0:
-        points_0.remove(point)
-        pt2 = find_nearest_point(point, points_0)
-        cv2.line(annotated_image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
-        points_0.append(point)
-
-
-
-
-
-    """
-    for dot in detections.xyxy:
-        pt1 = (int((dot[0]+dot[2])/2), int((dot[1]+dot[3])/2))
-
-        if len(dots) >= 1:
-            pt2 = dots[cdist([pt1], dots).argmin()]
-            cv2.line(annotated_image, pt1=pt1, pt2=pt2, color=(255, 255, 255), thickness=3)
-        else:
-            cv2.line(annotated_image, pt1=pt1, pt2=pt1, color=(255, 255, 255), thickness=3)
-        dots.append(pt1)
-    """
+    phantom_image, missing_bones = phantom(annotated_image.copy(), detections, classes)
     annotated_frame = box_annotator.annotate(
         scene=image.copy(), detections=detections, labels=labels
     )
 
-    Hori = np.concatenate((annotated_image, annotated_frame), axis=1)
+    Hori = np.concatenate((annotated_image, annotated_frame, phantom_image), axis=1)
     while True:
         cv2.imshow("Slider", Hori)
         if cv2.waitKey(1) == ord("q"):
