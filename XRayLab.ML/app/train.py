@@ -238,7 +238,7 @@ class XRayPredictions:
 
     def create_image_description(self, name):
         lorem = "Suspendisse faucibus, nisi id ullamcorper ultrices, nunc erat imperdiet ipsum, quis convallis augue orci sit amet diam. Curabitur iaculis turpis leo, lacinia congue libero mollis vitae. Mauris sit amet diam in orci aliquet tempor. In et pharetra sapien. Maecenas porta porttitor quam a maximus. Duis vitae erat ante. Nulla suscipit nibh eu nulla ullamcorper, a tristique mauris varius. Fusce suscipit feugiat ipsum, id malesuada leo pellentesque ut. Donec ut scelerisque sem. Cras pharetra finibus porttitor. "
-        for dir_path, dir_names, file_names in os.walk(f"./metadata"):
+        for dir_path, dir_names, file_names in os.walk(f"metadata"):
             for file_name in file_names:
                 if self.filename.startswith(file_name[:-4]):
                     print(f"found {self.filename} ---- {file_name}")

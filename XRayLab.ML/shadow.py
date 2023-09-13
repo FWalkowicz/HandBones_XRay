@@ -56,7 +56,7 @@ def model_prediction(image, classes):
 
 
 model = YOLO(os.path.join(os.getcwd(), "models/all_bones.pt"))
-image = cv2.imread("/home/filip/PycharmProjects/XRay/images/broken.png")
+image = cv2.imread("/XRayLab.ML/images/broken.png")
 """
 (h, w) = image.shape[:2]
 (cX, cY) = (w // 2, h // 2)
