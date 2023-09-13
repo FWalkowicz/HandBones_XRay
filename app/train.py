@@ -4,14 +4,15 @@ import supervision as sv
 from ultralytics import YOLO
 import cv2
 import secrets
+from scipy.spatial.distance import cdist
 
 
 def read_file(filename, token, name):
     try:
-        with open(f"metadata/{filename}", 'r') as file:
+        with open(f"metadata/{filename}", "r") as file:
             lines = file.readlines()
 
-        with open(f'./sessions/{token}/{name}.txt', 'w') as new_file:
+        with open(f"./sessions/{token}/{name}.txt", "w") as new_file:
             for line in lines:
                 new_file.write(line)
 
@@ -31,7 +32,9 @@ def draw_bbox_contours(image, all_contours, min_size: int, max_size: int):
 
 def find_objects_contours(image, threshold_value, kernel_size):
     _, thresh = cv2.threshold(image, threshold_value, 255, cv2.THRESH_BINARY)
-    thresholded = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, np.ones((kernel_size, kernel_size), np.uint8))
+    thresholded = cv2.morphologyEx(
+        thresh, cv2.MORPH_CLOSE, np.ones((kernel_size, kernel_size), np.uint8)
+    )
     contours_white, hierarchy_white = cv2.findContours(
         image=thresholded, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_NONE
     )
@@ -49,6 +52,7 @@ def model_prediction(image):
     annotated_image = mask_annotator.annotate(image, detections=detections)
 
     return annotated_image, detections
+
 
 def find_center_bbox(detections, class_id: int) -> list:
     dots = []
@@ -72,7 +76,16 @@ def draw_phantom(image, points, neighbour_points) -> None:
         pt2 = find_nearest_point(point, neighbour_points)
         cv2.line(image, pt1=point, pt2=pt2, color=(255, 255, 255), thickness=3)
         cv2.circle(image, point, 5, (255, 0, 0), cv2.FILLED)
-        cv2.putText(image, f"{points.index(point)}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(
+            image,
+            f"{points.index(point)}",
+            point,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 0, 0),
+            1,
+            cv2.LINE_AA,
+        )
 
 
 def phantom(image, detections):
@@ -97,14 +110,23 @@ def phantom(image, detections):
     points_3 = sorted(points_3, key=sort_by_x)
     points_4 = sorted(points_4, key=sort_by_x)
 
-    draw_phantom(image, points_1, points_2+points_4)
+    draw_phantom(image, points_1, points_2 + points_4)
     draw_phantom(image, points_2, points_4)
     draw_phantom(image, points_4, points_3)
     draw_phantom(image, points_3, points_0)
 
     for point in points_0:
         cv2.circle(image, point, 5, (255, 0, 0), cv2.FILLED)
-        cv2.putText(image, f"{points_0.index(point)}", point, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(
+            image,
+            f"{points_0.index(point)}",
+            point,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 0, 0),
+            1,
+            cv2.LINE_AA,
+        )
 
     for point in points_0:
         points_0.remove(point)
@@ -136,7 +158,9 @@ def phantom(image, detections):
 
     for class_name, count in finger_counts.items():
         if count > 0:
-            missing_bones.append(f"<p>Detected {count} {class_name}, missing {finger_bones_number[class_name] - count}</p>")
+            missing_bones.append(
+                f"<p>Detected {count} {class_name}, missing {finger_bones_number[class_name] - count}</p>"
+            )
 
     return image, missing_bones
 
@@ -172,9 +196,13 @@ class XRayPredictions:
 
         # Same kości
         placeholder = cv2.bitwise_not(image, mask=img)
-        gray_image = cv2.cvtColor(placeholder, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+        gray_image = cv2.cvtColor(
+            placeholder, cv2.COLOR_BGR2GRAY
+        )  # Convert to grayscale
         _, bones_binary = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY)
-        bones_contour, _ = cv2.findContours(bones_binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        bones_contour, _ = cv2.findContours(
+            bones_binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
+        )
 
         # Usunięcie kości ze zdjęcia
         inverted_image = cv2.bitwise_not(image, mask=inverted_mask)
@@ -189,7 +217,7 @@ class XRayPredictions:
         # zaznaczanie wszystkich zmian poza kośćmi
         draw_bbox_contours(image, contours, 200, 10000)
         try:
-            os.mkdir(f'./sessions/{self.token}')
+            os.mkdir(f"./sessions/{self.token}")
         except OSError as error:
             print(error)
         self.save_image("prediction", image)
@@ -217,7 +245,6 @@ class XRayPredictions:
                     read_file(file_name, self.token, name)
                     return
                 else:
-                    with open(f'./sessions/{self.token}/{name}.txt', 'w') as f:
+                    with open(f"./sessions/{self.token}/{name}.txt", "w") as f:
                         f.write(lorem)
                         f.close()
-

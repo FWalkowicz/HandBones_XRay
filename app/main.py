@@ -8,10 +8,7 @@ import os
 
 app = FastAPI()
 
-XRayStorage = {
-    "UniqueSessionId": None,
-    "Files": []
-}
+XRayStorage = {"UniqueSessionId": None, "Files": []}
 
 
 @app.get("/")
@@ -27,7 +24,7 @@ async def execute_ai(input_image: UploadFile):
     :param input_image: The X-ray image file to be processed (JPEG or PNG).
     :return: Information about the processed session
     """
-    if not input_image.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+    if not input_image.filename.lower().endswith((".jpg", ".jpeg", ".png")):
         return {"error": "Only JPEG and PNG images are supported."}
 
     # Save the uploaded file to a temporary location
@@ -40,21 +37,17 @@ async def execute_ai(input_image: UploadFile):
 
     processing = XRayPredictions(image=image, filename=name)
     token = processing.start()
-    XRayStorage['UniqueSessionId'] = token
+    XRayStorage["UniqueSessionId"] = token
     result = []
 
-    for dir_path, _, file_names in os.walk(f"./sessions/{XRayStorage['UniqueSessionId']}"):
+    for dir_path, _, file_names in os.walk(
+        f"./sessions/{XRayStorage['UniqueSessionId']}"
+    ):
         for file_name in file_names:
             if file_name.endswith(".jpg"):
-                file_dict = {
-                    "FileName": file_name,
-                    "Type": "Image"
-                }
+                file_dict = {"FileName": file_name, "Type": "Image"}
             if file_name.endswith(".txt"):
-                file_dict = {
-                    "FileName": file_name,
-                    "Type": "Metadata"
-                }
+                file_dict = {"FileName": file_name, "Type": "Metadata"}
 
             result.append(file_dict)
     XRayStorage["Files"] = result
@@ -72,23 +65,14 @@ def sessions():
 
     for dir_path, _, file_names in os.walk("./sessions"):
         if dir_path != "./sessions":
-            session_dict = {
-                "UniqueSessionId": os.path.basename(dir_path),
-                "Files": []
-            }
+            session_dict = {"UniqueSessionId": os.path.basename(dir_path), "Files": []}
 
             for file_name in file_names:
                 if file_name.endswith(".jpg"):
-                    file_dict = {
-                        "FileName": file_name,
-                        "Type": "Image"
-                    }
+                    file_dict = {"FileName": file_name, "Type": "Image"}
 
                 if file_name.endswith(".txt"):
-                    file_dict = {
-                        "FileName": file_name,
-                        "Type": "Metadata"
-                    }
+                    file_dict = {"FileName": file_name, "Type": "Metadata"}
 
                 session_dict["Files"].append(file_dict)
 
@@ -109,16 +93,10 @@ def unique_session(unique_session_id: str):
     for dir_path, _, file_names in os.walk(f"./sessions/{unique_session_id}"):
         for file_name in file_names:
             if file_name.endswith(".jpg"):
-                file_dict = {
-                    "FileName": file_name,
-                    "Type": "Image"
-                }
+                file_dict = {"FileName": file_name, "Type": "Image"}
 
             if file_name.endswith(".txt"):
-                file_dict = {
-                    "FileName": file_name,
-                    "Type": "Metadata"
-                }
+                file_dict = {"FileName": file_name, "Type": "Metadata"}
 
             result.append(file_dict)
 
@@ -132,9 +110,11 @@ def unique_session_image(unique_session_id: str, file_name: str):
 
     :return:
     """
+
     def file_iterator():
         with open(
-            os.path.join(f"./sessions/{unique_session_id}/", f"{file_name}.jpg"), mode="rb"
+            os.path.join(f"./sessions/{unique_session_id}/", f"{file_name}.jpg"),
+            mode="rb",
         ) as file:
             while True:
                 chunk = file.read(65536)
@@ -149,7 +129,8 @@ def unique_session_image(unique_session_id: str, file_name: str):
 def unique_session_meta(unique_session_id: str, file_name: str):
     def file_iterator():
         with open(
-                os.path.join(f"./sessions/{unique_session_id}/", f"{file_name}.txt"), mode="rb"
+            os.path.join(f"./sessions/{unique_session_id}/", f"{file_name}.txt"),
+            mode="rb",
         ) as file:
             while True:
                 chunk = file.read(65536)
@@ -171,6 +152,6 @@ def delete_session(unique_session_id: str):
 
     if os.path.exists(session_dir):
         shutil.rmtree(session_dir)
-        XRayStorage['UniqueSessionId'] = None
+        XRayStorage["UniqueSessionId"] = None
     else:
         raise HTTPException(status_code=404, detail="Session not found")
