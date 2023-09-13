@@ -17,5 +17,12 @@
                 return Path.GetFileNameWithoutExtension(FileName);
             }
         }
+        public string Label
+        {
+            get
+            {
+                return Path.GetFileNameWithoutExtension(FileName).Replace("_"," ");
+            }
+        }
     }
 }
