@@ -38,11 +38,11 @@ stages:
     - task: AzureRmWebAppDeployment@4
       inputs:
         ConnectionType: 'AzureRM'
-        azureSubscription: '$(AZURE_CONNECTOR)'
+        azureSubscription: 'ComcoreMedical_Azure_Connector'
         appType: 'webApp'
-        WebAppName: '$(BUILD_PREFIX)-$(BUILD_SUFIX)'
-        package: '$(Build.ArtifactStagingDirectory)/RoboticsPlatform.zip'
-      displayName: "Publish $(BUILD_PREFIX)-$(BUILD_SUFIX)"
+        WebAppName: 'ComcoreMedical-webapp'
+        package: '$(Build.ArtifactStagingDirectory)/XRayLab.UI.zip'
+      displayName: "Publish ComcoreMedical-webapp"
       
 
 - stage: Python_apps
@@ -53,11 +53,11 @@ stages:
 
     steps:
       - task: Docker@2
-        displayName: Container -> SignalR Client
+        displayName: XRay Lab ML API
         inputs:
           command: buildAndPush
-          repository: 'signalr_ros_client'
-          dockerfile: $(Build.Repository.LocalPath)/containers/signalRRosClient/Dockerfile
+          repository: 'xray_ml_api'
+          dockerfile: $(Build.Repository.LocalPath)/XRayLab.ML/Dockerfile
           containerRegistry: $(DOCKER_REGISTRY_CONNECTOR)
           tags: |
             $(tag)
