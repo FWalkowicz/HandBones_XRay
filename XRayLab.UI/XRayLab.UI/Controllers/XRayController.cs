@@ -35,7 +35,7 @@ namespace XRayLab.UI.Controllers
 
             //var byteAray = System.IO.File.ReadAllBytes(@"C:\temp\knife.jpeg");
 
-            var result = _xRay.POST_ExecuteAI(ReadFully(stream));
+            var result = _xRay.POST_ExecuteAI(ReadFully(stream), data.FileName.Trim());
             //=====
             var image = _xRay.GET_UniqueSessionImage(result.UniqueSessionId, "prediction");
             var imageMeta = _xRay.GET_UniqueSessionMeta(result.UniqueSessionId, "prediction");
@@ -49,7 +49,6 @@ namespace XRayLab.UI.Controllers
                 Description = imageMeta,
                 Files = result.Files.Where(s => !s.FileName.Contains("txt")).ToList()
             };
-
 
             return Ok(response);
         }

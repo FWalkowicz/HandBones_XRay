@@ -26,7 +26,7 @@ namespace XRayLab.UI.ApiWrapper
             client.BaseAddress = new Uri(WebApiUrl);
         }
 
-        public SessionListDTO POST_ExecuteAI(byte[] byteArray)
+        public SessionListDTO POST_ExecuteAI(byte[] byteArray, string fileName)
         {
             try
             {
@@ -39,7 +39,7 @@ namespace XRayLab.UI.ApiWrapper
 
                 MultipartFormDataContent form = new MultipartFormDataContent();
 
-                form.Add(new ByteArrayContent(byteArray, 0, byteArray.Length), "input_image", "hello1.jpg");
+                form.Add(new ByteArrayContent(byteArray, 0, byteArray.Length), "input_image", $"{fileName}");
                 HttpResponseMessage response = client.PostAsync("executeAI", form).Result;
 
                 response.EnsureSuccessStatusCode();

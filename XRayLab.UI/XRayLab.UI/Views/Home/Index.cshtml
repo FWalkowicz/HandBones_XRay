@@ -78,9 +78,7 @@
 
 <script>
 
-
-
-
+    var fileName="";
     var uniqueSessionId = "";
 
     var inputImage = "imageInput";
@@ -98,8 +96,13 @@
     });
 
     function preview_2(obj) {
+        $("#description").html("");
         if (FileReader) {
             var reader = new FileReader();
+
+            var filePath=obj.value;
+            fileName = filePath.split(/[\\\/]/).pop();
+
             reader.readAsDataURL(obj.files[0]);
             reader.onload = function (e) {
                 var image = new Image();
@@ -117,7 +120,7 @@
     function setResult(response) {
         uniqueSessionId = response.uniqueSessionId;
         document.getElementById(outputImage).src = response.imageBase64;
-        $("#description").text(response.description);
+        $("#description").html(response.description);
 
     }
     function bindViewMenu(response) {
@@ -162,10 +165,12 @@
     }
 
     function sendImage() {
+        $('.dropdown-menu').text("");
         var imagebase64 = $("#imageInput").attr('src');
 
         var jsondata = JSON.stringify({
             Image: imagebase64,
+            FileName: fileName
         });
 
         showLoading();
