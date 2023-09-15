@@ -44,7 +44,7 @@ def find_objects_contours(image, threshold_value, kernel_size):
 
 
 def model_prediction(image, classes):
-    model = YOLO(os.path.join(os.getcwd(), "models/all_bones.pt"))
+    model = YOLO(os.path.join(os.getcwd(), "app/models/all_bones.pt"))
     mask_annotator = sv.MaskAnnotator()
     result = model(image, verbose=False)[0]
     detections = sv.Detections.from_ultralytics(result)
@@ -55,8 +55,8 @@ def model_prediction(image, classes):
     return annotated_image, detections
 
 
-model = YOLO(os.path.join(os.getcwd(), "models/all_bones.pt"))
-image = cv2.imread("/XRayLab.ML/images/broken.png")
+model = YOLO(os.path.join(os.getcwd(), "app/models/all_bones.pt"))
+image = cv2.imread("/images/broken.png")
 """
 (h, w) = image.shape[:2]
 (cX, cY) = (w // 2, h // 2)
