@@ -60,4 +60,4 @@ stages:
           dockerfile: $(Build.Repository.LocalPath)/XRayLab.ML/Dockerfile
           containerRegistry: 'ComcoreMedical_ACR_Connector'
           tags: |
-            1.4v
+            latest
