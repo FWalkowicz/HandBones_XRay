@@ -12,7 +12,6 @@ stages:
       solution: '**/*.sln'
       buildPlatform: 'Any CPU'
       buildConfiguration: 'Release'
-      tag: '1.2v'
 
     steps:
     - task: NuGetToolInstaller@1
@@ -61,4 +60,4 @@ stages:
           dockerfile: $(Build.Repository.LocalPath)/XRayLab.ML/Dockerfile
           containerRegistry: 'ComcoreMedical_ACR_Connector'
           tags: |
-            $(tag)
+            '1.3v'
