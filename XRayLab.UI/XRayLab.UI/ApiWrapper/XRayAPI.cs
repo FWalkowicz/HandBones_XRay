@@ -24,9 +24,18 @@ namespace XRayLab.UI.ApiWrapper
 
             client = new HttpClient(httpHandler);
             client.BaseAddress = new Uri(WebApiUrl);
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.ConnectionClose = true;
+
+            var clientId = "comcore";
+            var clientSecret = "75TF3R7HrqFB";
+            var authenticationString = $"{clientId}:{clientSecret}";
+            var base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.ASCIIEncoding.UTF8.GetBytes(authenticationString));
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
         }
 
-        public SessionListDTO POST_ExecuteAI(byte[] byteArray)
+        public SessionListDTO POST_ExecuteAI(byte[] byteArray, string fileName)
         {
             try
             {
@@ -39,7 +48,7 @@ namespace XRayLab.UI.ApiWrapper
 
                 MultipartFormDataContent form = new MultipartFormDataContent();
 
-                form.Add(new ByteArrayContent(byteArray, 0, byteArray.Length), "input_image", "hello1.jpg");
+                form.Add(new ByteArrayContent(byteArray, 0, byteArray.Length), "input_image", $"{fileName}");
                 HttpResponseMessage response = client.PostAsync("executeAI", form).Result;
 
                 response.EnsureSuccessStatusCode();

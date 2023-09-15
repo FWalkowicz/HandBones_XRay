@@ -2,6 +2,10 @@
 {
     public static class ULRs
     {
-        public const string XRayAPIURL = "http://192.168.2.116:8003";
+#if DEBUG
+        public static string XRayAPIURL = "http://192.168.2.116:8003";
+#else
+        public static string XRayAPIURL = Environment.GetEnvironmentVariable("APIURL");
+#endif
     }
 }
