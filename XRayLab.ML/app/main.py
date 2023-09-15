@@ -1,19 +1,55 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException, Depends, status
 from fastapi.responses import StreamingResponse
 import shutil
-from pydantic import BaseModel
 from train import XRayPredictions
 import cv2
 import os
+from typing import Annotated
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import secrets
+import base64
+
 
 app = FastAPI()
+security = HTTPBasic()
 
 XRayStorage = {"UniqueSessionId": None, "Files": []}
+UserStorage = {
+    "clientId": "comcore",
+    "clientSecret": "75TF3R7HrqFB"
+}
+
+
+def get_current_username(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+):
+    current_username_bytes = credentials.username.encode("utf8")
+    correct_username_bytes = b"comcore"
+    is_correct_username = secrets.compare_digest(
+        current_username_bytes, correct_username_bytes
+    )
+    current_password_bytes = credentials.password.encode("utf8")
+    correct_password_bytes = b"75TF3R7HrqFB"
+    is_correct_password = secrets.compare_digest(
+        current_password_bytes, correct_password_bytes
+    )
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect credentials",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
 
 
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+
+@app.get("/auth")
+def read_current_user(credentials: Annotated[str, Depends(get_current_username)]):
+    return {"username": credentials}
 
 
 @app.post("/executeAI")
@@ -155,3 +191,16 @@ def delete_session(unique_session_id: str):
         XRayStorage["UniqueSessionId"] = None
     else:
         raise HTTPException(status_code=404, detail="Session not found")
+
+
+@app.delete("/sessions")
+def delete_sessions():
+    """
+    Delete all sessions and all associated files.
+
+   :return: None
+   """
+    session_dir = os.path.join("./sessions/")
+    for _, dir_names, _ in os.walk(session_dir):
+        for dir_name in dir_names:
+            shutil.rmtree(os.path.join(session_dir, dir_name))

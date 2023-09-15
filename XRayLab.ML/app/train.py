@@ -43,15 +43,32 @@ def find_objects_contours(image, threshold_value, kernel_size):
 
 
 def model_prediction(image):
+    classes = [
+        "Carpals",
+        "Distal phalanges",
+        "Intermediate phalanges",
+        "Metacarpals",
+        "Proximal phalanges",
+        "Radius",
+        "Ulna",
+    ]
     model = YOLO(os.path.join(os.getcwd(), "models/all_bones.pt"))
     mask_annotator = sv.MaskAnnotator()
     result = model(image, verbose=False)[0]
     detections = sv.Detections.from_ultralytics(result)
     # detections = detections[detections.class_id == 0]
     detections = detections[detections.confidence >= 0.70]
+    box_annotator = sv.BoxAnnotator()
+    labels = [
+        f"{class_id, classes[class_id]} {confidence:0.2f}"
+        for _, _, confidence, class_id, _ in detections
+    ]
     annotated_image = mask_annotator.annotate(image, detections=detections)
+    annotated_image_bbox = box_annotator.annotate(
+        scene=image.copy(), detections=detections, labels=labels
+    )
 
-    return annotated_image, detections
+    return annotated_image, detections, annotated_image_bbox
 
 
 def find_center_bbox(detections, class_id: int) -> list:
@@ -170,14 +187,16 @@ class XRayPredictions:
         self.model = YOLO(os.path.join(os.getcwd(), "models/all_bones.pt"))
         self.image = image
         self.token = secrets.token_urlsafe(2)
-        self.filename = filename
+        self.filename = filename.strip()
 
     def start(self):
         image = cv2.resize(self.image, (600, 600))
 
         # predykcja modelu
-        annotated_image, detections = model_prediction(image)
+        annotated_image, detections, annotated_image_bbox = model_prediction(image)
         polygons = [sv.mask_to_polygons(m) for m in detections.mask]
+
+        # zaznaczenie fantoma
         phantom_image, missing_bones = phantom(annotated_image.copy(), detections)
 
         # Wyszukanie metalowych obiektów w pierwotnym zdjęciu
@@ -221,30 +240,40 @@ class XRayPredictions:
         except OSError as error:
             print(error)
         self.save_image("prediction", image)
-        self.create_image_description("prediction")
+        self.create_image_description("prediction", missing_bones)
         self.save_image("model_prediction", annotated_image)
-        self.create_image_description("model_prediction")
+        self.create_image_description("model_prediction", missing_bones)
+        self.save_image("model_prediction_bbox", annotated_image_bbox)
+        self.create_image_description("model_prediction_bbox", missing_bones)
         self.save_image("without_bones", inverted_image)
-        self.create_image_description("without_bones")
+        self.create_image_description("without_bones", missing_bones)
         self.save_image("only_bones", placeholder)
-        self.create_image_description("only_bones")
+        self.create_image_description("only_bones", missing_bones)
         self.save_image("phantom", phantom_image)
-        self.create_image_description("phantom")
+        self.create_image_description("phantom", missing_bones)
 
         return self.token
 
     def save_image(self, name, image):
-        cv2.imwrite(f"./sessions/{self.token}/{name}.jpg", image)
+        cv2.imwrite(f".//sessions//{self.token}//{name}.jpg", image)
 
-    def create_image_description(self, name):
-        lorem = "Suspendisse faucibus, nisi id ullamcorper ultrices, nunc erat imperdiet ipsum, quis convallis augue orci sit amet diam. Curabitur iaculis turpis leo, lacinia congue libero mollis vitae. Mauris sit amet diam in orci aliquet tempor. In et pharetra sapien. Maecenas porta porttitor quam a maximus. Duis vitae erat ante. Nulla suscipit nibh eu nulla ullamcorper, a tristique mauris varius. Fusce suscipit feugiat ipsum, id malesuada leo pellentesque ut. Donec ut scelerisque sem. Cras pharetra finibus porttitor. "
+    def create_image_description(self, name, bones_description):
+        lorem = "<p>Suspendisse faucibus, nisi id ullamcorper ultrices, nunc erat imperdiet ipsum, quis convallis augue orci sit amet diam. Curabitur iaculis turpis leo, lacinia congue libero mollis vitae. Mauris sit amet diam in orci aliquet tempor. In et pharetra sapien. Maecenas porta porttitor quam a maximus. Duis vitae erat ante. Nulla suscipit nibh eu nulla ullamcorper, a tristique mauris varius. Fusce suscipit feugiat ipsum, id malesuada leo pellentesque ut. Donec ut scelerisque sem. Cras pharetra finibus porttitor.</p>"
         for dir_path, dir_names, file_names in os.walk(f"metadata"):
             for file_name in file_names:
-                if self.filename.startswith(file_name[:-4]):
-                    print(f"found {self.filename} ---- {file_name}")
+                if self.filename.rsplit(".", 1)[0].strip().startswith(file_name.rsplit(".", 1)[0].strip()):
                     read_file(file_name, self.token, name)
-                    return
-                else:
-                    with open(f"./sessions/{self.token}/{name}.txt", "w") as f:
-                        f.write(lorem)
+                    print(f"found {file_name} --- {self.filename}")
+                    with open(f".//sessions//{self.token}//{name}.txt", "a") as f:
+                        for line in bones_description:
+                            f.write("\n" + line)
                         f.close()
+                        break
+                else:
+                    with open(f".//sessions//{self.token}//{name}.txt", "a") as f:
+                        f.write(lorem)
+                        for line in bones_description:
+                            f.write("\n" + line)
+                        f.close()
+                        break
+
