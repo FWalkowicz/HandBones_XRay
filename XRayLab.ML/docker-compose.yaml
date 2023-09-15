@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   x-ray:
-    image: 'walkowiczf/xray:latest'
+    image: 'walkowiczf/xray:v1.4'
     network_mode: "host"
     privileged: true
     restart: always
@@ -9,7 +9,8 @@ services:
        - "uvicorn"
        - "main:app"
        - "--host"
-       - "192.168.1.66"
+       #- "192.168.1.66"
+       - "192.168.0.193"
        - "--port"
        - "8003"
 

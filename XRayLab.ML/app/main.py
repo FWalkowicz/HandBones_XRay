@@ -155,3 +155,16 @@ def delete_session(unique_session_id: str):
         XRayStorage["UniqueSessionId"] = None
     else:
         raise HTTPException(status_code=404, detail="Session not found")
+
+
+@app.delete("/sessions")
+def delete_sessions():
+    """
+    Delete all sessions and all associated files.
+
+   :return: None
+   """
+    session_dir = os.path.join("./sessions/")
+    for _, dir_names, _ in os.walk(session_dir):
+        for dir_name in dir_names:
+            shutil.rmtree(os.path.join(session_dir, dir_name))

@@ -1,0 +1,6 @@
+<p>Multiple calcifications are visible in the soft tissues of fingers I - IV, mainly in the area of the interphalangeal joints and in the area of the distal phalanges. The changes highlight and distort the outline of the fingers. The most severe changes occur in the second finger. In addition, distal third and fourth phalanges are smaller than typical - a necessary supplement to the interview. The overall picture may correspond to a systemic disease, primarily dermatomyosithis, less likely scleroderma. Correlation with clinical data, comparative assessment and further broad diagnostics indicated. Minor degenerative changes in the wrist, metacarpophalangeal and interphalangeal joints. The greatest changes are in the I metacarpophalangeal joint. A small bone island in the head of the fifth metacarpal bone.</p>
+<p>Detected 7 Carpals, missing 1</p>
+<p>Detected 2 Distal phalanges, missing 3</p>
+<p>Detected 2 Intermediate phalanges, missing 2</p>
+<p>Detected 3 Proximal phalanges, missing 2</p>
+<p>Detected 5 Metacarpals, missing 0</p>
