@@ -12,6 +12,7 @@ stages:
       solution: '**/*.sln'
       buildPlatform: 'Any CPU'
       buildConfiguration: 'Release'
+      tag: '1.2v'
 
     steps:
     - task: NuGetToolInstaller@1
