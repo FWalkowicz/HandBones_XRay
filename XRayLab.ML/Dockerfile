@@ -1,5 +1,5 @@
 ## Obraz bazowy
-FROM python:3.8-bullseye
+FROM python:3.9-bullseye
 
 #install pip dependencies
 COPY requirements.txt .

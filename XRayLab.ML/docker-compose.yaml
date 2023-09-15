@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   x-ray:
-    image: 'walkowiczf/xray:v1.4'
+    image: 'walkowiczf/xray:latest'
     network_mode: "host"
     privileged: true
     restart: always
