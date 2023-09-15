@@ -24,6 +24,15 @@ namespace XRayLab.UI.ApiWrapper
 
             client = new HttpClient(httpHandler);
             client.BaseAddress = new Uri(WebApiUrl);
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.ConnectionClose = true;
+
+            var clientId = "comcore";
+            var clientSecret = "75TF3R7HrqFB";
+            var authenticationString = $"{clientId}:{clientSecret}";
+            var base64EncodedAuthenticationString = Convert.ToBase64String(System.Text.ASCIIEncoding.UTF8.GetBytes(authenticationString));
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
         }
 
         public SessionListDTO POST_ExecuteAI(byte[] byteArray, string fileName)
